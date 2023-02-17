@@ -120,7 +120,7 @@ namespace StarterAssets
 #if ENABLE_INPUT_SYSTEM && STARTER_ASSETS_PACKAGES_CHECKED
                 return _playerInput.currentControlScheme == "KeyboardMouse";
 #else
-				return false;
+            return false;
 #endif
             }
         }
@@ -148,7 +148,7 @@ namespace StarterAssets
 #if ENABLE_INPUT_SYSTEM && STARTER_ASSETS_PACKAGES_CHECKED
             _playerInput = GetComponent<PlayerInput>();
 #else
-			Debug.LogError( "Starter Assets package is missing dependencies. Please use Tools/Starter Assets/Reinstall Dependencies to fix it");
+         Debug.LogError( "Starter Assets package is missing dependencies. Please use Tools/Starter Assets/Reinstall Dependencies to fix it");
 #endif
 
             AssignAnimationIDs();
@@ -174,31 +174,64 @@ namespace StarterAssets
 
         private void Update()
         {
-            _hasAnimator = TryGetComponent(out _animator);
 
             if (pv.IsMine)
             {
-                JumpAndGravity();
-                GroundedCheck();
-                Move();
                 if (Input.GetKeyDown(KeyCode.Alpha0))
                 {
-                    Debug.LogError("Press 0 - Flash_Light");
-                    pv.RPC("IsFlashLightStartRPC", RpcTarget.All);
+                    Debug.LogError("Press 0 - Timer Start");
+                    pv.RPC("IsTimerStartPRC", RpcTarget.All);
                 }
-                if (Input.GetKeyDown(KeyCode.V))
+
+                if (GameObject.Find("Timer").GetComponent<Timer>().isTimerStart && GameObject.FindGameObjectWithTag("Cube").GetComponent<HideAndSeekCubeCollide>().isHNSCubeCollide)
                 {
+                    if (Input.GetKeyDown(KeyCode.Alpha1))
+                    {
+                        Debug.LogError("Press 1 - Timer Stop && Box Create");
+                        pv.RPC("IsPressKey", RpcTarget.All);
+                    }
+                }
+                _hasAnimator = TryGetComponent(out _animator);
+                if (GameObject.Find("Timer").GetComponent<Timer>().isMove)
+                {
+                    JumpAndGravity();
+                    GroundedCheck();
+                    Move();
                     CameraViewToggle();
+                    Pickup();
+                    Grap();
+                    if (Input.GetKeyDown(KeyCode.Q))
+                    {
+                        //Debug.LogError("Press 0 - Flash_Light");
+                        pv.RPC("IsFlashLightStartRPC", RpcTarget.All);
+                    }
+
                 }
             }
         }
 
+        //RPC
         [PunRPC]
         void IsFlashLightStartRPC()
         {
             GameObject.Find("FlashLight").GetComponent<Flash_Move>().start = true;
             GameObject.Find("FlashLight").GetComponent<Flash_Move>().speed = 0.03f;
         }
+        [PunRPC]
+        void IsTimerStartPRC()
+        {
+            GameObject.Find("Timer").GetComponent<Timer>().isTimerStart = true;
+            GameObject.Find("Timer").GetComponent<Timer>().limitTime = 5f;
+        }
+
+        [PunRPC]
+        void IsPressKey()
+        {
+            GameObject.Find("Timer").GetComponent<Timer>().isKeyPressed = true;
+        }
+
+
+
 
         private void LateUpdate()
         {
@@ -207,11 +240,49 @@ namespace StarterAssets
 
         private void CameraViewToggle()
         {
-            Debug.Log("View Trans");
-            state1 = !state1;
-            state2 = !state2;
-            GameObject.Find("Camera").transform.Find("ThirdCam").gameObject.SetActive(state1);
-            GameObject.Find("Camera").transform.Find("OneCam").gameObject.SetActive(state2);
+            if (Input.GetKeyDown(KeyCode.F))
+            {
+                state1 = !state1;
+                state2 = !state2;
+                GameObject.Find("Camera").transform.Find("ThirdCam").gameObject.SetActive(state1);
+                GameObject.Find("Camera").transform.Find("OneCam").gameObject.SetActive(state2);
+            }
+        }
+
+        private void Pickup()
+        {
+            if (Input.GetKeyDown(KeyCode.G))
+            {
+                _animator.SetBool("Pick", true);
+            }
+            else
+            {
+                _animator.SetBool("Pick", false);
+            }
+        }
+
+        private void Grap()
+        {
+            if (Input.GetKeyDown(KeyCode.H))
+            {
+                _animator.SetBool("Grap", true);
+            }
+            else
+            {
+                _animator.SetBool("Grap", false);
+            }
+        }
+
+        private void Jump()
+        {
+            if (Input.GetKeyDown(KeyCode.Space))
+            {
+                _animator.SetBool("Jump", true);
+            }
+            else
+            {
+                _animator.SetBool("Jump", false);
+            }
         }
 
         private void AssignAnimationIDs()
